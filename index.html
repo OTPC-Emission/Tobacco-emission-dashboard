@@ -1,92 +1,468 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ระบบติดตามแนวโน้มสารที่เกิดจากการเผาไหม้ของส่วนประกอบของผลิตภัณฑ์ยาสูบ</title>
-
-  <!-- Internet connection is required for these two libraries. -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-
-  <style>
-    :root{
-      --navy:#12345b; --blue:#2563a6; --light:#eaf2fb; --lighter:#f6f8fb;
-      --ink:#172033; --muted:#6b7280; --border:#dbe3ec;
-      --warn:#d97706; --danger:#b42318; --ok:#18794e; --white:#fff;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:#f3f6fa;color:var(--ink)}
-    .topbar{background:var(--navy);color:white;padding:20px 24px}
-    .topbar h1{margin:0 0 5px;font-size:clamp(20px,3vw,30px);font-weight:700}
-    .topbar p{margin:0;color:#dbe8f7}
-    .wrap{max-width:1450px;margin:auto;padding:20px}
-    .panel,.metric{background:#fff;border:1px solid var(--border);border-radius:14px}
-    .panel{padding:18px;margin-bottom:18px}
-    .controls{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;align-items:end}
-    label{display:block;font-size:13px;font-weight:650;margin-bottom:6px}
-    select,input[type=file],button{width:100%;min-height:42px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;padding:8px 10px;font:inherit}
-    button{cursor:pointer;background:var(--blue);border-color:var(--blue);color:#fff;font-weight:650}
-    button.secondary{background:#fff;color:var(--navy);border-color:#9db1c7}
-    .note{font-size:13px;color:var(--muted);margin-top:10px}
-    .metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
-    .metric{padding:14px 15px}
-    .metric .label{color:var(--muted);font-size:12px}
-    .metric .value{font-size:25px;font-weight:750;margin-top:4px;color:var(--navy)}
-    .metric .sub{font-size:12px;margin-top:3px;color:var(--muted)}
-    .grid2{display:grid;grid-template-columns:2fr 1fr;gap:18px}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-    .chartbox{min-height:330px}
-    .chartbox.small{min-height:285px}
-    canvas{width:100%!important;height:290px!important}
-    .section-title{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:10px}
-    .section-title h2{font-size:18px;margin:0}
-    .section-title p{margin:4px 0 0;font-size:13px;color:var(--muted)}
-    .badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;background:var(--light);color:var(--navy)}
-    .timeline{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:14px 0}
-    .timeline .line{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--blue) 0 28%,#d9e4f1 28% 100%)}
-    .summary{font-size:15px;line-height:1.75}
-    .warning{border-left:4px solid var(--warn);background:#fffaf0;padding:12px 14px;border-radius:8px;margin-top:10px}
-    .danger{color:var(--danger);font-weight:700}
-    .quality{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .quality div{background:var(--lighter);padding:10px;border-radius:10px}
-    .status{font-size:12px;color:var(--muted)}
-    footer{padding:8px 0 25px;color:var(--muted);font-size:12px}
-    @media(max-width:1100px){.metrics{grid-template-columns:repeat(3,1fr)}.controls{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}}
-    @media(max-width:620px){.wrap{padding:12px}.metrics{grid-template-columns:repeat(2,1fr)}.controls{grid-template-columns:1fr}.quality{grid-template-columns:1fr 1fr}}
-  
-    .report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .report-actions button{width:auto;min-width:190px}
-    @media print{
-      @page{size:A4 landscape;margin:10mm}
-      body{background:#fff!important}
-      .topbar{padding:14px 18px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .wrap{max-width:none!important;padding:10px!important}
-      .controls,.report-actions,#loadStatus,.note button,input[type=file],footer{display:none!important}
-      .panel,.metric{break-inside:avoid;box-shadow:none!important}
-      .panel{margin-bottom:10px!important;padding:12px!important}
-      .metrics{gap:8px!important}
-      .metric{padding:10px!important}
-      .metric .value{font-size:20px!important}
-      canvas{max-height:230px!important}
-      .chartbox{min-height:250px!important}
-      .chartbox.small{min-height:225px!important}
-      .grid2,.grid3{gap:10px!important}
-      .section-title{margin-bottom:6px!important}
-      .warning{background:#fff!important;border:1px solid #d1d5db!important}
-    }
-
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบติดตามค่าทาร์ นิโคติน และคาร์บอนมอนอกไซด์ของผลิตภัณฑ์ยาสูบ</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#10385f;
+  --navy-2:#1f5b8f;
+  --blue:#2f7cc4;
+  --blue-soft:#eaf4ff;
+  --amber:#f59e0b;
+  --amber-soft:#fff5df;
+  --orange:#ef7d22;
+  --orange-soft:#fff0e2;
+  --red:#d64045;
+  --red-soft:#fff1f1;
+  --green:#1f8f62;
+  --green-soft:#edf9f3;
+  --slate:#344054;
+  --muted:#667085;
+  --line:#d9e4ef;
+  --card:#ffffff;
+  --bg:#f5f8fb;
+  --shadow:0 10px 30px rgba(16,56,95,.07);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Thai",Tahoma,sans-serif;
+  background:linear-gradient(180deg,#f7faff 0%,#f4f7fb 100%);
+  color:#142133;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.header{
+  background:linear-gradient(120deg,var(--navy) 0%, var(--navy-2) 100%);
+  color:#fff;
+  position:relative;
+  overflow:hidden;
+}
+.header:before,.header:after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.header:before{width:320px;height:320px;right:-120px;top:-120px}
+.header:after{width:220px;height:220px;left:-90px;bottom:-90px}
+.header-inner{
+  max-width:1480px;
+  margin:auto;
+  padding:26px 22px 22px;
+  position:relative;
+  z-index:1;
+}
+.kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 11px;
+  border-radius:999px;
+  background:rgba(255,255,255,.14);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+h1{
+  margin:14px 0 0;
+  font-size:clamp(24px,3vw,36px);
+  line-height:1.22;
+}
+.law{
+  margin:10px 0 0;
+  font-size:15px;
+  color:#deebf7;
+  line-height:1.55;
+  max-width:1100px;
+}
+.sub{
+  margin:8px 0 0;
+  color:#cde0f0;
+  font-size:14px;
+}
+.shell{max-width:1480px;margin:auto;padding:18px 20px 28px}
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.35fr .95fr;
+  gap:16px;
+  margin-top:-10px;
+}
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:16px;
+}
+.panel.flat{box-shadow:none}
+.head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+.head h2,.head h3{margin:0;color:var(--navy);line-height:1.3}
+.head h2{font-size:20px}
+.head h3{font-size:17px}
+.head p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.badge.blue{background:var(--blue-soft);color:var(--navy)}
+.badge.amber{background:var(--amber-soft);color:#9a6700}
+.badge.orange{background:var(--orange-soft);color:#b45309}
+.badge.red{background:var(--red-soft);color:var(--red)}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.quick-guide{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.guide-card{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+}
+.guide-card .num{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#fff;background:var(--navy);
+  margin-bottom:10px;
+}
+.guide-card strong{display:block;color:var(--navy);margin-bottom:6px}
+.guide-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.legend-tiles{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.legend-tile{
+  border-radius:16px;
+  padding:14px;
+  border:1px solid var(--line);
+}
+.legend-tile strong{display:block;font-size:16px}
+.legend-tile p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+.legend-tile.blue{background:linear-gradient(180deg,#eff7ff,#fff)}
+.legend-tile.orange{background:linear-gradient(180deg,#fff7ea,#fff)}
+.legend-tile.red{background:linear-gradient(180deg,#fff3f3,#fff)}
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr auto;
+  gap:10px;
+  align-items:end;
+}
+label{
+  display:block;
+  font-size:12px;
+  font-weight:750;
+  color:var(--slate);
+  margin-bottom:6px;
+}
+select,input[type=file]{
+  width:100%;
+  min-height:44px;
+  padding:9px 11px;
+  border-radius:12px;
+  border:1px solid #c9d6e3;
+  background:#fff;
+  color:#142133;
+}
+.btn{
+  min-height:44px;
+  border-radius:12px;
+  border:1px solid var(--blue);
+  background:var(--blue);
+  color:#fff;
+  font-weight:760;
+  padding:10px 14px;
+}
+.btn.secondary{
+  background:#fff;
+  color:var(--navy);
+  border-color:#b5c5d6;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.metric{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:15px;
+  min-height:118px;
+}
+.metric .label{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+.metric .value{
+  font-size:28px;
+  font-weight:820;
+  color:var(--navy);
+  margin-top:8px;
+  line-height:1;
+}
+.metric .note{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+  line-height:1.35;
+}
+.metric.red .value{color:var(--red)}
+.metric.orange .value{color:#c26700}
+.metric.green .value{color:var(--green)}
+.limit-ribbon{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.limit-chip{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:999px;
+  padding:9px 12px;
+  font-size:13px;
+  font-weight:730;
+  color:var(--navy);
+}
+.metric-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.metric-tab{
+  min-height:42px;
+  padding:8px 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--navy);
+  font-weight:800;
+}
+.metric-tab.active{
+  background:var(--navy);
+  color:#fff;
+  border-color:var(--navy);
+}
+.chart-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.legend-line{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  font-size:12px;
+  color:var(--muted);
+}
+.key{display:inline-flex;align-items:center;gap:6px}
+.swatch{
+  width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)
+}
+.line-demo{
+  width:26px;border-top:2px dashed var(--red);display:inline-block
+}
+.chart-wrap{overflow:hidden}
+.chart-holder{position:relative;width:100%;min-height:520px}
+.grid2{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:16px;
+}
+.table-wrap{
+  max-height:580px;
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  background:#fff;
+}
+th,td{
+  padding:10px 9px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  vertical-align:middle;
+}
+th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#f7fbff;
+  color:var(--navy);
+  font-size:12px;
+}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td strong{color:var(--navy)}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:12px;
+  font-weight:750;
+}
+.pill.blue{background:var(--blue-soft);color:var(--navy)}
+.pill.orange{background:var(--orange-soft);color:#b45309}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.summary-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.summary-row{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px 13px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.summary-row strong{color:var(--navy)}
+.summary-row span{color:var(--muted);font-size:13px}
+.info-callout{
+  border-left:4px solid var(--amber);
+  background:#fff8ea;
+  border-radius:12px;
+  padding:13px 14px;
+  color:#6b4f00;
+  font-size:13px;
+  line-height:1.6;
+}
+.footer{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.65;
+  padding:4px 2px 20px;
+}
+@media(max-width:1180px){
+  .hero-grid,.grid2{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(3,1fr)}
+  .controls{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:720px){
+  .shell{padding:12px}
+  .header-inner{padding:20px 14px 18px}
+  .quick-guide,.legend-tiles{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .controls{grid-template-columns:1fr}
+  .chart-holder{min-height:620px}
+}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff}
+  .shell{max-width:none;padding:8px}
+  .no-print,.footer{display:none!important}
+  .panel,.metric{box-shadow:none!important;break-inside:avoid}
+  .chart-holder{height:640px!important}
+  .metric .value{font-size:20px}
+}
+</style>
 </head>
 <body>
-<header class="topbar">
-  <h1>ระบบติดตามแนวโน้มสารที่เกิดจากการเผาไหม้ของส่วนประกอบของผลิตภัณฑ์ยาสูบ</h1>
-  <p style="font-size:15px;font-weight:600;margin-top:6px">ตามกฎกระทรวงกำหนดส่วนประกอบของผลิตภัณฑ์ยาสูบและสารที่เกิดจากการเผาไหม้ของส่วนประกอบของผลิตภัณฑ์ยาสูบ พ.ศ. ๒๕๖๗</p>
-  <p style="margin-top:7px">Tar • Nicotine • Carbon Monoxide (CO) | ติดตามแนวโน้มเทียบกับค่าที่กำหนดตามกฎหมาย ซึ่งจะมีผลบังคับใช้เต็มรูปแบบตั้งแต่วันที่ 24 พฤษภาคม 2572</p>
+<header class="header">
+  <div class="header-inner">
+    <div class="kicker">Tobacco Emission Dashboard</div>
+    <h1>ระบบติดตามค่าทาร์ นิโคติน และคาร์บอนมอนอกไซด์ของผลิตภัณฑ์ยาสูบ</h1>
+    <div class="law">ตามกฎกระทรวงกำหนดส่วนประกอบของผลิตภัณฑ์ยาสูบและสารที่เกิดจากการเผาไหม้ของส่วนประกอบของผลิตภัณฑ์ยาสูบ พ.ศ. ๒๕๖๗</div>
+    <div class="sub">ค่าที่กำหนด: Tar ≤ 10 mg/มวน • Nicotine ≤ 1 mg/มวน • CO ≤ 10 mg/มวน</div>
+  </div>
 </header>
 
-<main class="wrap">
-  <section class="panel">
+<main class="shell">
+  <section class="hero-grid">
+    <div class="panel">
+      <div class="head">
+        <div>
+          <h2>วิธีอ่านข้อมูลแบบง่าย</h2>
+          <p>ออกแบบให้ประชาชนและผู้บริหารอ่านได้เร็วขึ้น โดยใช้สีช่วยบอกระดับความใกล้ค่าที่กำหนด</p>
+        </div>
+        
+      </div>
+      <div class="quick-guide">
+        <div class="guide-card">
+          <div class="num">1</div>
+          <strong>เลือกสารที่ต้องการดู</strong>
+          <p>สลับดู Tar, Nicotine หรือ CO ได้ตามต้องการในกราฟหลัก</p>
+        </div>
+        <div class="guide-card">
+          <div class="num">2</div>
+          <strong>ดูสีของแท่งกราฟ</strong>
+          <p>สีน้ำเงิน = ต่ำกว่าค่ากำหนด, สีส้ม = เข้าใกล้ค่ากำหนด, สีแดง = สูงกว่าค่าที่กำหนด</p>
+        </div>
+        <div class="guide-card">
+          <div class="num">3</div>
+          <strong>ดูเส้นประสีแดง</strong>
+          <p>เส้นประแนวตั้งคือค่ามาตรฐานตามกฎหมายของสารที่กำลังแสดงอยู่</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="head">
+        <div>
+          <h2>คำอธิบายระดับสี</h2>
+          <p>กำหนดสีใหม่เพื่อให้มองเห็นรายการที่ “ใกล้ค่ามาตรฐาน” ชัดขึ้น</p>
+        </div>
+      </div>
+      <div class="legend-tiles">
+        <div class="legend-tile blue">
+          <strong>ต่ำกว่า 80%</strong>
+          <p>อยู่ต่ำกว่าค่าที่กำหนดค่อนข้างมาก แสดงเป็นสีน้ำเงิน</p>
+        </div>
+        <div class="legend-tile orange">
+          <strong>80–100%</strong>
+          <p>อยู่ใกล้ค่าที่กำหนดหรือใกล้เส้นมาตรฐาน แสดงเป็นสีส้ม</p>
+        </div>
+        <div class="legend-tile red">
+          <strong>มากกว่า 100%</strong>
+          <p>สูงกว่าค่าที่กำหนดตามกฎหมาย แสดงเป็นสีแดง</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel no-print">
+    <div class="head">
+      <div>
+        <h2>ตัวกรองข้อมูล</h2>
+        <p>เลือกปี ประเภทผลิตภัณฑ์ และสถานะ เพื่อดูข้อมูลได้ง่ายขึ้น</p>
+      </div>
+      
+    </div>
     <div class="controls">
       <div>
         <label for="yearFilter">ปีที่รับแจ้ง</label>
@@ -97,379 +473,486 @@
         <select id="typeFilter"><option value="all">ทั้งหมด</option></select>
       </div>
       <div>
-        <label for="metricFilter">สารสำหรับ Distribution</label>
-        <select id="metricFilter">
-          <option value="Tar">Tar</option><option value="Nicotine">Nicotine</option><option value="CO">CO</option>
+        <label for="statusFilter">สถานะการแสดง</label>
+        <select id="statusFilter">
+          <option value="all">ทุก Product ID</option>
+          <option value="exceed">เฉพาะที่เกิน ≥1 สาร</option>
+          <option value="watch">เฉพาะที่ใกล้เกณฑ์ (80–100%)</option>
+          <option value="within">เฉพาะที่ต่ำกว่า 80%</option>
         </select>
       </div>
       <div>
-        <label for="fileInput">อัปโหลด Excel เพื่อดูทันที</label>
-        <input id="fileInput" type="file" accept=".xlsx,.xls" />
+        <label for="sortFilter">การเรียงลำดับ</label>
+        <select id="sortFilter">
+          <option value="id">เรียงตาม Product ID</option>
+          <option value="desc">เรียงจากค่าสูงสุด</option>
+        </select>
       </div>
       <div>
-        <label>&nbsp;</label>
-        <button id="reloadBtn" class="secondary">โหลด data/latest.xlsx ใหม่</button>
+        <button id="printBtn" class="btn secondary" type="button">พิมพ์ / PDF</button>
       </div>
     </div>
-    <div id="loadStatus" class="note">กำลังโหลดข้อมูล...</div>
-    <div class="report-actions">
-      <button id="printBtn" type="button">พิมพ์ / บันทึกเป็น PDF</button>
-      <button id="downloadCsvBtn" type="button" class="secondary">ดาวน์โหลดรายงาน CSV</button>
-    </div>
-    <div class="note"><strong>องค์ประกอบข้อมูล:</strong> ฐานข้อมูลล่าสุด: Cigarette 46 รายการ (95.8%) • Cigar 2 รายการ (4.2%) • Trend หลักตั้งค่าเริ่มต้นเป็น Cigarette</div>
+    <div id="loadStatus" style="margin-top:10px;font-size:12px;color:var(--muted)">กำลังโหลดข้อมูล...</div>
   </section>
 
   <section class="metrics">
-    <div class="metric"><div class="label">ข้อมูลทั้งหมด</div><div id="kpiTotal" class="value">–</div><div class="sub">รายการ</div></div>
-    <div class="metric"><div class="label">ข้อมูลสมบูรณ์</div><div id="kpiComplete" class="value">–</div><div class="sub">Tar/Nicotine/CO ครบ</div></div>
-    <div class="metric"><div class="label">Tar median ปีล่าสุด</div><div id="kpiTar" class="value">–</div><div id="kpiTarSub" class="sub">mg/มวน</div></div>
-    <div class="metric"><div class="label">Nicotine median ปีล่าสุด</div><div id="kpiNic" class="value">–</div><div id="kpiNicSub" class="sub">mg/มวน</div></div>
-    <div class="metric"><div class="label">CO median ปีล่าสุด</div><div id="kpiCO" class="value">–</div><div id="kpiCOSub" class="sub">mg/มวน</div></div>
-    <div class="metric"><div class="label">สูงกว่าเกณฑ์ 100%</div><div id="kpiAbove" class="value">–</div><div class="sub">อย่างน้อย 1 สาร</div></div>
+    <div class="metric">
+      <div class="label">Product ทั้งหมดภายใต้ตัวกรอง</div>
+      <div id="kTotal" class="value">–</div>
+      <div class="note">จำนวนรายการที่กำลังแสดงผล</div>
+    </div>
+    <div class="metric red">
+      <div class="label">Product ที่เกินอย่างน้อย 1 สาร</div>
+      <div id="kExceed" class="value">–</div>
+      <div id="kExceedPct" class="note">–</div>
+    </div>
+    <div class="metric orange">
+      <div class="label">ใกล้ค่ามาตรฐาน (80–100%)</div>
+      <div id="kWatch" class="value">–</div>
+      <div class="note">อย่างน้อย 1 สารอยู่ในช่วงใกล้เกณฑ์</div>
+    </div>
+    <div class="metric">
+      <div class="label">เกิน 1 สารเท่านั้น</div>
+      <div id="kOne" class="value">–</div>
+      <div class="note">ไม่นับซ้ำกับ 2–3 สาร</div>
+    </div>
+    <div class="metric">
+      <div class="label">เกิน 2 สารเท่านั้น</div>
+      <div id="kTwo" class="value">–</div>
+      <div class="note">ไม่นับซ้ำกับ 3 สาร</div>
+    </div>
+    <div class="metric red">
+      <div class="label">เกินครบ 3 สาร</div>
+      <div id="kThree" class="value">–</div>
+      <div class="note">Tar + Nicotine + CO</div>
+    </div>
   </section>
 
   <section class="panel">
-    <div class="section-title">
+    <div class="head">
       <div>
-        <h2>แนวโน้ม Tar / Nicotine / CO เทียบกับเกณฑ์ — ค่าเริ่มต้น: Cigarette</h2>
-        <p>Median รายปีของประเภทผลิตภัณฑ์ที่เลือก โดยค่าเริ่มต้นเป็น Cigarette; คิดเป็นร้อยละของเกณฑ์ Tar 10, Nicotine 1 และ CO 10 mg/มวน</p>
+        <h2>ค่ามาตรฐานที่ใช้เทียบ</h2>
+        <p>เส้นประสีแดงบนกราฟด้านล่างอ้างอิงจากค่ามาตรฐานเหล่านี้</p>
       </div>
-      <span class="badge">100% = เกณฑ์เต็มรูปแบบ</span>
     </div>
-    <div class="chartbox"><canvas id="overallChart"></canvas></div>
+    <div class="limit-ribbon">
+      <div class="limit-chip">Tar ≤ 10 mg/มวน</div>
+      <div class="limit-chip">Nicotine ≤ 1 mg/มวน</div>
+      <div class="limit-chip">CO ≤ 10 mg/มวน</div>
+    </div>
   </section>
 
-  <section class="grid3">
-    <div class="panel"><div class="section-title"><div><h2>Tar</h2><p>Median/Mean รายปี • Reference 10 mg/มวน</p></div></div><div class="chartbox small"><canvas id="tarChart"></canvas></div></div>
-    <div class="panel"><div class="section-title"><div><h2>Nicotine</h2><p>Median/Mean รายปี • Reference 1 mg/มวน</p></div></div><div class="chartbox small"><canvas id="nicChart"></canvas></div></div>
-    <div class="panel"><div class="section-title"><div><h2>CO</h2><p>Median/Mean รายปี • Reference 10 mg/มวน</p></div></div><div class="chartbox small"><canvas id="coChart"></canvas></div></div>
+  <section class="panel">
+    <div class="head">
+      <div>
+        <h2 id="chartTitle">ค่าทาร์ของทุก Product ID เทียบกับค่ามาตรฐาน</h2>
+        <p id="chartSub">แท่งกราฟทุกแท่งแสดงค่าจริงของแต่ละ Product ID และเส้นประแสดงค่ามาตรฐานตามกฎหมาย</p>
+      </div>
+      <div class="metric-tabs">
+        <button class="metric-tab active" data-metric="Tar" type="button">Tar</button>
+        <button class="metric-tab" data-metric="Nicotine" type="button">Nicotine</button>
+        <button class="metric-tab" data-metric="CO" type="button">CO</button>
+      </div>
+    </div>
+    <div class="chart-meta">
+      <div class="legend-line">
+        <span class="key"><i class="swatch" style="background:#2f7cc4"></i>ต่ำกว่า 80%</span>
+        <span class="key"><i class="swatch" style="background:#ef7d22"></i>ใกล้ค่ามาตรฐาน 80–100%</span>
+        <span class="key"><i class="swatch" style="background:#d64045"></i>สูงกว่า 100%</span>
+        <span class="key"><i class="line-demo"></i>ค่ามาตรฐาน</span>
+      </div>
+      <span id="chartCount" class="badge blue">–</span>
+    </div>
+    <div class="chart-wrap">
+      <div id="chartHolder" class="chart-holder">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
   </section>
 
   <section class="grid2">
     <div class="panel">
-      <div class="section-title"><div><h2>การกระจายเทียบกับเกณฑ์</h2><p>&lt;80%, 80–&lt;90%, 90–100%, &gt;100%</p></div></div>
-      <div class="chartbox"><canvas id="distributionChart"></canvas></div>
+      <div class="head">
+        <div>
+          <h2>รายการ Product ID ที่ควรจับตา</h2>
+          <p>เรียงจากรายการที่มีค่าสูงที่สุดเมื่อเทียบกับเกณฑ์ เพื่อให้เห็นจุดที่ควรเฝ้าระวังก่อน</p>
+        </div>
+        <span id="tableCount" class="badge red">–</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>ปี</th>
+              <th>Tar</th>
+              <th>Nicotine</th>
+              <th>CO</th>
+              <th>จำนวนสารที่เกิน</th>
+              <th>สถานะหลัก</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
     </div>
     <div class="panel">
-      <div class="section-title"><div><h2>ช่วงเวลาการบังคับใช้กฎหมาย</h2><p>ใช้สำหรับตีความผลอย่างระมัดระวัง</p></div></div>
-      <div class="timeline"><strong>24 พ.ค. 2568</strong><div class="line"></div><strong>24 พ.ค. 2572</strong></div>
-      <p><strong>24 พ.ค. 2568:</strong> เริ่มมีผลบังคับใช้</p>
-      <p><strong>ช่วง 2568–2571:</strong> ช่วงเปลี่ยนผ่านก่อนบังคับใช้เต็มรูปแบบ</p>
-      <p><strong>24 พ.ค. 2572:</strong> บังคับใช้เต็มรูปแบบ</p>
-      <div class="warning">ข้อมูลมีเพียง “ปีที่รับแจ้ง” จึงไม่สามารถจำแนกข้อมูลปี 2572 ว่าอยู่ก่อนหรือหลังวันที่ 24 พฤษภาคม 2572 ได้ หากไม่มีวันที่รายรายการ</div>
+      <div class="head">
+        <div>
+          <h2>สรุปแบบเข้าใจง่าย</h2>
+          <p>จำนวน Product ที่เข้าข่ายในแต่ละระดับความเสี่ยง</p>
+        </div>
+      </div>
+      <div id="summaryList" class="summary-list"></div>
+      <div class="info-callout" style="margin-top:14px">
+        หมายเหตุ: ข้อมูลช่วงก่อนการบังคับใช้เต็มรูปแบบ ใช้เพื่อการเปรียบเทียบกับค่าที่กำหนดตามกฎกระทรวง เพื่อเฝ้าระวังแนวโน้มและจัดลำดับความสำคัญในการติดตาม
+      </div>
     </div>
   </section>
 
-  <section class="panel">
-    <div class="section-title"><div><h2>Executive Summary</h2><p>สร้างอัตโนมัติตามข้อมูลและตัวกรอง</p></div></div>
-    <div id="executiveSummary" class="summary"></div>
-  </section>
-
-  <section class="panel">
-    <div class="section-title"><div><h2>คุณภาพข้อมูล</h2><p>ไม่มีการเปิดเผยชื่อบริษัทบน Dashboard</p></div><span class="badge">Anonymous</span></div>
-    <div class="quality">
-      <div><strong id="qRows">–</strong><div class="status">จำนวนรายการภายใต้ตัวกรอง</div></div>
-      <div><strong id="qMissing">–</strong><div class="status">รายการที่มี Missing</div></div>
-      <div><strong id="qYears">–</strong><div class="status">จำนวนปีที่พบ</div></div>
-      <div><strong id="qUpdated">–</strong><div class="status">เวลาอัปเดต Dashboard</div></div>
-    </div>
-  </section>
-
-  <footer>
-    แหล่งข้อมูล: ข้อมูลการแจ้งค่าการปล่อยสารจากผลิตภัณฑ์ยาสูบ • Dashboard ไม่แสดงชื่อบริษัท •
-    ข้อมูลช่วงก่อน 24 พ.ค. 2572 ใช้คำว่า “เทียบกับเกณฑ์ที่จะบังคับใช้เต็มรูปแบบ”
-  </footer>
+  <div class="footer">
+    หน้าเว็บนี้ใช้ Product ID แบบนิรนาม เว็บไซต์จะอ่านข้อมูลจากไฟล์ <code>data/latest.xlsx</code> เมื่ออัปโหลดขึ้น GitHub Pages
+  </div>
 </main>
 
 <script>
-const EMBEDDED_DATA = [{"Company_ID": "Cig001", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 9.8, "Nicotine": 0.93, "CO": 8.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig002", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 6.8, "Nicotine": 0.69, "CO": 4.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig003", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 7.2, "Nicotine": 0.53, "CO": 9.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig004", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 14, "Nicotine": 0.9, "CO": 13, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig005", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 6.4, "Nicotine": 0.42, "CO": 7.3, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig006", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 5.8, "Nicotine": 0.35, "CO": 6.5, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig007", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 7.2, "Nicotine": 0.53, "CO": 9.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig008", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 6.9, "Nicotine": 0.46, "CO": 10.1, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig009", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 5.8, "Nicotine": 0.36, "CO": 5.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig010", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 11.8, "Nicotine": 0.45, "CO": 9.3, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig011", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 11.6, "Nicotine": 0.81, "CO": 9.6, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig012", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 9.1, "Nicotine": 0.85, "CO": 10.1, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig013", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 8.9, "Nicotine": 0.79, "CO": 10.2, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig014", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2568, "Tar": 6.9, "Nicotine": 0.46, "CO": 10.1, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Ci001", "Product_Type": "Cigar", "ปีที่รับแจ้ง": 2568, "Tar": 8.13, "Nicotine": 0.98, "CO": 9.16, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Ci002", "Product_Type": "Cigar", "ปีที่รับแจ้ง": 2568, "Tar": 9.45, "Nicotine": 0.86, "CO": 8.97, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig001", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 6.8, "Nicotine": 0.7, "CO": 4.7, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig002", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 7, "Nicotine": 0.67, "CO": 4.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig003", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 7.9, "Nicotine": 0.77, "CO": 9.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig004", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.4, "Nicotine": 0.95, "CO": 11, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig005", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 11.6, "Nicotine": 0.9, "CO": 12.5, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig006", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.4, "Nicotine": 1.06, "CO": 11.05, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig007", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 11, "Nicotine": 1.2, "CO": 11, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig008", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10, "Nicotine": 1, "CO": 9, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig009", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10, "Nicotine": 1, "CO": 9, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig010", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 9.1, "Nicotine": 0.9, "CO": 8.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig011", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 9.5, "Nicotine": 0.66, "CO": 12.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig012", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 9.8, "Nicotine": 0.68, "CO": 12.7, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig013", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.3, "Nicotine": 0.84, "CO": 10.3, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig014", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig015", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig016", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig017", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig018", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 12, "Nicotine": 0.7, "CO": 9, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig019", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 14, "Nicotine": 0.9, "CO": 13, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig020", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 14, "Nicotine": 0.9, "CO": 13, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig021", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 14, "Nicotine": 0.9, "CO": 13, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig022", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 6.02, "Nicotine": 0.5, "CO": 5.98, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig023", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 11, "Nicotine": 1.1, "CO": 13, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig024", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 7, "Nicotine": 0.7, "CO": 6, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig025", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 8.1, "Nicotine": 0.71, "CO": 7.8, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig026", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 7.9, "Nicotine": 0.77, "CO": 9.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig027", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 8.91, "Nicotine": 0.68, "CO": 8.51, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig028", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 7.07, "Nicotine": 0.48, "CO": 5.65, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig029", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 19.87, "Nicotine": 1.48, "CO": 14.95, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig030", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 8.1, "Nicotine": 0.6, "CO": 9.3, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig031", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 9.4, "Nicotine": 0.46, "CO": 9.4, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}, {"Company_ID": "Cig032", "Product_Type": "Cigarette", "ปีที่รับแจ้ง": 2569, "Tar": 11.36, "Nicotine": 0.01, "CO": 0.3, "Tar_Limit": 10, "Nicotine_Limit": 1, "CO_Limit": 10}];
-
+const EMBEDDED = [{"Product_ID": "Cig001", "Product_Type": "Cigarette", "year": 2568, "Tar": 9.8, "Nicotine": 0.93, "CO": 8.8, "Exceed_Count": 0}, {"Product_ID": "Cig002", "Product_Type": "Cigarette", "year": 2568, "Tar": 6.8, "Nicotine": 0.69, "CO": 4.4, "Exceed_Count": 0}, {"Product_ID": "Cig003", "Product_Type": "Cigarette", "year": 2568, "Tar": 7.2, "Nicotine": 0.53, "CO": 9.4, "Exceed_Count": 0}, {"Product_ID": "Cig004", "Product_Type": "Cigarette", "year": 2568, "Tar": 14.0, "Nicotine": 0.9, "CO": 13.0, "Exceed_Count": 2}, {"Product_ID": "Cig005", "Product_Type": "Cigarette", "year": 2568, "Tar": 6.4, "Nicotine": 0.42, "CO": 7.3, "Exceed_Count": 0}, {"Product_ID": "Cig006", "Product_Type": "Cigarette", "year": 2568, "Tar": 5.8, "Nicotine": 0.35, "CO": 6.5, "Exceed_Count": 0}, {"Product_ID": "Cig007", "Product_Type": "Cigarette", "year": 2568, "Tar": 7.2, "Nicotine": 0.53, "CO": 9.4, "Exceed_Count": 0}, {"Product_ID": "Cig008", "Product_Type": "Cigarette", "year": 2568, "Tar": 6.9, "Nicotine": 0.46, "CO": 10.1, "Exceed_Count": 1}, {"Product_ID": "Cig009", "Product_Type": "Cigarette", "year": 2568, "Tar": 5.8, "Nicotine": 0.36, "CO": 5.8, "Exceed_Count": 0}, {"Product_ID": "Cig010", "Product_Type": "Cigarette", "year": 2568, "Tar": 11.8, "Nicotine": 0.45, "CO": 9.3, "Exceed_Count": 1}, {"Product_ID": "Cig011", "Product_Type": "Cigarette", "year": 2568, "Tar": 11.6, "Nicotine": 0.81, "CO": 9.6, "Exceed_Count": 1}, {"Product_ID": "Cig012", "Product_Type": "Cigarette", "year": 2568, "Tar": 9.1, "Nicotine": 0.85, "CO": 10.1, "Exceed_Count": 1}, {"Product_ID": "Cig013", "Product_Type": "Cigarette", "year": 2568, "Tar": 8.9, "Nicotine": 0.79, "CO": 10.2, "Exceed_Count": 1}, {"Product_ID": "Cig014", "Product_Type": "Cigarette", "year": 2568, "Tar": 6.9, "Nicotine": 0.46, "CO": 10.1, "Exceed_Count": 1}, {"Product_ID": "Ci001", "Product_Type": "Cigar", "year": 2568, "Tar": 8.13, "Nicotine": 0.98, "CO": 9.16, "Exceed_Count": 0}, {"Product_ID": "Ci002", "Product_Type": "Cigar", "year": 2568, "Tar": 9.45, "Nicotine": 0.86, "CO": 8.97, "Exceed_Count": 0}, {"Product_ID": "Cig001", "Product_Type": "Cigarette", "year": 2569, "Tar": 6.8, "Nicotine": 0.7, "CO": 4.7, "Exceed_Count": 0}, {"Product_ID": "Cig002", "Product_Type": "Cigarette", "year": 2569, "Tar": 7.0, "Nicotine": 0.67, "CO": 4.8, "Exceed_Count": 0}, {"Product_ID": "Cig003", "Product_Type": "Cigarette", "year": 2569, "Tar": 7.9, "Nicotine": 0.77, "CO": 9.4, "Exceed_Count": 0}, {"Product_ID": "Cig004", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.4, "Nicotine": 0.95, "CO": 11.0, "Exceed_Count": 2}, {"Product_ID": "Cig005", "Product_Type": "Cigarette", "year": 2569, "Tar": 11.6, "Nicotine": 0.9, "CO": 12.5, "Exceed_Count": 2}, {"Product_ID": "Cig006", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.4, "Nicotine": 1.06, "CO": 11.05, "Exceed_Count": 3}, {"Product_ID": "Cig007", "Product_Type": "Cigarette", "year": 2569, "Tar": 11.0, "Nicotine": 1.2, "CO": 11.0, "Exceed_Count": 3}, {"Product_ID": "Cig008", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.0, "Nicotine": 1.0, "CO": 9.0, "Exceed_Count": 0}, {"Product_ID": "Cig009", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.0, "Nicotine": 1.0, "CO": 9.0, "Exceed_Count": 0}, {"Product_ID": "Cig010", "Product_Type": "Cigarette", "year": 2569, "Tar": 9.1, "Nicotine": 0.9, "CO": 8.4, "Exceed_Count": 0}, {"Product_ID": "Cig011", "Product_Type": "Cigarette", "year": 2569, "Tar": 9.5, "Nicotine": 0.66, "CO": 12.4, "Exceed_Count": 1}, {"Product_ID": "Cig012", "Product_Type": "Cigarette", "year": 2569, "Tar": 9.8, "Nicotine": 0.68, "CO": 12.7, "Exceed_Count": 1}, {"Product_ID": "Cig013", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.3, "Nicotine": 0.84, "CO": 10.3, "Exceed_Count": 2}, {"Product_ID": "Cig014", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Exceed_Count": 1}, {"Product_ID": "Cig015", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Exceed_Count": 1}, {"Product_ID": "Cig016", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Exceed_Count": 1}, {"Product_ID": "Cig017", "Product_Type": "Cigarette", "year": 2569, "Tar": 10.7, "Nicotine": 0.84, "CO": 8.8, "Exceed_Count": 1}, {"Product_ID": "Cig018", "Product_Type": "Cigarette", "year": 2569, "Tar": 12.0, "Nicotine": 0.7, "CO": 9.0, "Exceed_Count": 1}, {"Product_ID": "Cig019", "Product_Type": "Cigarette", "year": 2569, "Tar": 14.0, "Nicotine": 0.9, "CO": 13.0, "Exceed_Count": 2}, {"Product_ID": "Cig020", "Product_Type": "Cigarette", "year": 2569, "Tar": 14.0, "Nicotine": 0.9, "CO": 13.0, "Exceed_Count": 2}, {"Product_ID": "Cig021", "Product_Type": "Cigarette", "year": 2569, "Tar": 14.0, "Nicotine": 0.9, "CO": 13.0, "Exceed_Count": 2}, {"Product_ID": "Cig022", "Product_Type": "Cigarette", "year": 2569, "Tar": 6.02, "Nicotine": 0.5, "CO": 5.98, "Exceed_Count": 0}, {"Product_ID": "Cig023", "Product_Type": "Cigarette", "year": 2569, "Tar": 11.0, "Nicotine": 1.1, "CO": 13.0, "Exceed_Count": 3}, {"Product_ID": "Cig024", "Product_Type": "Cigarette", "year": 2569, "Tar": 7.0, "Nicotine": 0.7, "CO": 6.0, "Exceed_Count": 0}, {"Product_ID": "Cig025", "Product_Type": "Cigarette", "year": 2569, "Tar": 8.1, "Nicotine": 0.71, "CO": 7.8, "Exceed_Count": 0}, {"Product_ID": "Cig026", "Product_Type": "Cigarette", "year": 2569, "Tar": 7.9, "Nicotine": 0.77, "CO": 9.4, "Exceed_Count": 0}, {"Product_ID": "Cig027", "Product_Type": "Cigarette", "year": 2569, "Tar": 8.91, "Nicotine": 0.68, "CO": 8.51, "Exceed_Count": 0}, {"Product_ID": "Cig028", "Product_Type": "Cigarette", "year": 2569, "Tar": 7.07, "Nicotine": 0.48, "CO": 5.65, "Exceed_Count": 0}, {"Product_ID": "Cig029", "Product_Type": "Cigarette", "year": 2569, "Tar": 19.87, "Nicotine": 1.48, "CO": 14.95, "Exceed_Count": 3}, {"Product_ID": "Cig030", "Product_Type": "Cigarette", "year": 2569, "Tar": 8.1, "Nicotine": 0.6, "CO": 9.3, "Exceed_Count": 0}, {"Product_ID": "Cig031", "Product_Type": "Cigarette", "year": 2569, "Tar": 9.4, "Nicotine": 0.46, "CO": 9.4, "Exceed_Count": 0}, {"Product_ID": "Cig032", "Product_Type": "Cigarette", "year": 2569, "Tar": 11.36, "Nicotine": 0.01, "CO": 0.3, "Exceed_Count": 1}];
 const LIMITS = {Tar:10, Nicotine:1, CO:10};
-const METRICS = ["Tar","Nicotine","CO"];
-let sourceData = [];
-let charts = {};
-let currentSource = "ข้อมูลตัวอย่างฝังในเว็บ";
+let rows = [];
+let activeMetric = "Tar";
+let chart = null;
 
-function normalizeType(v){
-  const s = String(v ?? "").trim().toLowerCase().replace(/\s+/g,"");
-  if(["cigarette","cigarettes","ciggarette","ciggarettes"].includes(s)) return "Cigarette";
-  if(["cigar","cigars"].includes(s)) return "Cigar";
-  if(s.startsWith("cigarette") || s.startsWith("ciggarette")) return "Cigarette";
-  if(s === "cigar" || s.startsWith("cigar-")) return "Cigar";
-  return v ? String(v).trim() : "ไม่ระบุ";
-}
+const regLinePlugin = {
+  id: "regLinePlugin",
+  afterDatasetsDraw(chart, args, opts){
+    if(!opts || typeof opts.value === "undefined") return;
+    const {ctx, chartArea, scales} = chart;
+    const x = scales.x.getPixelForValue(opts.value);
+    if(!Number.isFinite(x)) return;
+    ctx.save();
+    ctx.strokeStyle = "#d64045";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7,5]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const label = opts.label || `เกณฑ์ ${opts.value}`;
+    ctx.font = "700 12px system-ui";
+    const pad = 6;
+    const w = ctx.measureText(label).width + pad*2;
+    const h = 22;
+    const bx = Math.min(x + 6, chartArea.right - w - 2);
+    const by = chartArea.top + 4;
+    ctx.fillStyle = "rgba(255,255,255,.96)";
+    ctx.fillRect(bx, by, w, h);
+    ctx.strokeStyle = "#d64045";
+    ctx.strokeRect(bx, by, w, h);
+    ctx.fillStyle = "#d64045";
+    ctx.fillText(label, bx + pad, by + 15);
+    ctx.restore();
+  }
+};
+Chart.register(regLinePlugin);
+
 function numberOrNull(v){
-  if(v===null || v===undefined || v==="") return null;
-  const s=String(v).trim();
-  if(["n/a","na","-","null"].includes(s.toLowerCase())) return null;
-  const n=Number(s.replace(/,/g,""));
+  if(v === null || v === undefined || v === "") return null;
+  const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
-function cleanRows(rows){
-  return rows.map((r,i)=>({
-    id: String(r.Company_ID ?? r.Product_ID ?? `R${i+1}`),
-    type: normalizeType(r.Product_Type),
-    year: Number(r["ปีที่รับแจ้ง"] ?? r.Year ?? r.year),
-    Tar: numberOrNull(r.Tar),
-    Nicotine: numberOrNull(r.Nicotine),
-    CO: numberOrNull(r.CO),
-    Tar_Limit: numberOrNull(r.Tar_Limit) ?? LIMITS.Tar,
-    Nicotine_Limit: numberOrNull(r.Nicotine_Limit) ?? LIMITS.Nicotine,
-    CO_Limit: numberOrNull(r.CO_Limit) ?? LIMITS.CO
-  })).filter(r => Number.isFinite(r.year));
+function normalizeType(v){
+  const s = String(v || "").trim().toLowerCase().replace(/\s+/g,"");
+  if(["cigarette","cigarettes","ciggarette","ciggarettes"].includes(s) || s.startsWith("cigarette") || s.startsWith("ciggarette")) return "Cigarette";
+  if(["cigar","cigars"].includes(s)) return "Cigar";
+  return String(v || "ไม่ระบุ").trim();
 }
-function median(a){
-  const b=a.filter(Number.isFinite).slice().sort((x,y)=>x-y);
-  if(!b.length) return null;
-  const m=Math.floor(b.length/2);
-  return b.length%2 ? b[m] : (b[m-1]+b[m])/2;
+function pct(v, metric){
+  return Number.isFinite(v) ? (v / LIMITS[metric]) * 100 : null;
 }
-function mean(a){
-  const b=a.filter(Number.isFinite);
-  return b.length ? b.reduce((s,x)=>s+x,0)/b.length : null;
+function statusClassByPct(p){
+  if(!Number.isFinite(p)) return "blue";
+  if(p > 100) return "red";
+  if(p >= 80) return "orange";
+  return "blue";
 }
-function fmt(v,d=2){return Number.isFinite(v)?v.toFixed(d):"–";}
-function pctChange(curr,prev){
-  if(!Number.isFinite(curr)||!Number.isFinite(prev)||prev===0) return null;
-  return (curr-prev)/prev*100;
+function statusLabelByPct(p){
+  if(!Number.isFinite(p)) return "ไม่มีข้อมูล";
+  if(p > 100) return "สูงกว่าเกณฑ์";
+  if(p >= 80) return "ใกล้ค่ามาตรฐาน";
+  return "ต่ำกว่า 80%";
 }
-function trendLabel(p){
-  if(!Number.isFinite(p)) return "";
-  if(p>1) return `↑ ${Math.abs(p).toFixed(1)}%`;
-  if(p<-1) return `↓ ${Math.abs(p).toFixed(1)}%`;
-  return `→ ${Math.abs(p).toFixed(1)}%`;
-}
-function filteredRows(){
-  const y=document.getElementById("yearFilter").value;
-  const t=document.getElementById("typeFilter").value;
-  return sourceData.filter(r=>(y==="all"||String(r.year)===y)&&(t==="all"||r.type===t));
-}
-function yearsOf(rows){return [...new Set(rows.map(r=>r.year))].sort((a,b)=>a-b);}
-function annualStats(rows,metric){
-  return yearsOf(rows).map(year=>{
-    const rr=rows.filter(r=>r.year===year);
-    const vals=rr.map(r=>r[metric]).filter(Number.isFinite);
-    return {year, median:median(vals), mean:mean(vals), n:vals.length};
-  });
-}
-function updateFilters(){
-  const yf=document.getElementById("yearFilter"), tf=document.getElementById("typeFilter");
-  const oldY=yf.value, oldT=tf.value;
-  yf.innerHTML='<option value="all">ทั้งหมด</option>';
-  yearsOf(sourceData).forEach(y=>yf.insertAdjacentHTML("beforeend",`<option value="${y}">${y}</option>`));
-  tf.innerHTML='<option value="all">ทั้งหมด</option>';
-  [...new Set(sourceData.map(r=>r.type))].sort().forEach(t=>tf.insertAdjacentHTML("beforeend",`<option value="${t}">${t}</option>`));
-  if([...yf.options].some(o=>o.value===oldY)) yf.value=oldY;
-  if([...tf.options].some(o=>o.value===oldT)) tf.value=oldT;
-}
-function destroyChart(name){ if(charts[name]) {charts[name].destroy(); delete charts[name];} }
-function commonOptions(yTitle){
-  return {
-    responsive:true, maintainAspectRatio:false,
-    interaction:{mode:"index",intersect:false},
-    plugins:{legend:{position:"bottom"},tooltip:{enabled:true}},
-    scales:{x:{title:{display:true,text:"ปีที่รับแจ้ง"}},y:{title:{display:true,text:yTitle},beginAtZero:true}}
-  };
-}
-function renderOverall(rows){
-  destroyChart("overall");
-  const years=yearsOf(rows);
-  const series=METRICS.map(metric=>({
-    label:metric,
-    data:years.map(y=>{
-      const vals=rows.filter(r=>r.year===y).map(r=>r[metric]).filter(Number.isFinite);
-      const m=median(vals);
-      return m===null?null:m/LIMITS[metric]*100;
-    }),
-    borderWidth:3,tension:.22,spanGaps:true
-  }));
-  series.push({label:"เกณฑ์ 100%",data:years.map(()=>100),borderDash:[7,6],borderWidth:2,pointRadius:0});
-  charts.overall=new Chart(document.getElementById("overallChart"),{
-    type:"line",data:{labels:years,datasets:series},
-    options:{...commonOptions("% ของเกณฑ์"),scales:{x:{title:{display:true,text:"ปีที่รับแจ้ง"}},y:{title:{display:true,text:"ร้อยละของเกณฑ์"},suggestedMin:0,suggestedMax:150}}}
-  });
-}
-function renderMetricChart(canvasId,key,metric,limit){
-  destroyChart(key);
-  const rows=filteredRows(), stats=annualStats(rows,metric);
-  charts[key]=new Chart(document.getElementById(canvasId),{
-    type:"line",
-    data:{labels:stats.map(x=>x.year),datasets:[
-      {label:"Median",data:stats.map(x=>x.median),borderWidth:3,tension:.2},
-      {label:"Mean",data:stats.map(x=>x.mean),borderWidth:2,borderDash:[5,4],tension:.2},
-      {label:`Reference ${limit}`,data:stats.map(()=>limit),borderWidth:2,borderDash:[8,6],pointRadius:0}
-    ]},
-    options:commonOptions("mg/มวน")
-  });
-}
-function renderDistribution(rows){
-  destroyChart("distribution");
-  const metric=document.getElementById("metricFilter").value, limit=LIMITS[metric];
-  const buckets=[0,0,0,0];
-  rows.forEach(r=>{
-    const v=r[metric]; if(!Number.isFinite(v)) return;
-    const p=v/limit*100;
-    if(p<80)buckets[0]++; else if(p<90)buckets[1]++; else if(p<=100)buckets[2]++; else buckets[3]++;
-  });
-  charts.distribution=new Chart(document.getElementById("distributionChart"),{
-    type:"bar",
-    data:{labels:["<80%","80–<90%","90–100%",">100%"],datasets:[{label:metric,data:buckets}]},
-    options:{...commonOptions("จำนวนรายการ"),plugins:{legend:{display:false}}}
-  });
-}
-function renderKPIs(rows){
-  document.getElementById("kpiTotal").textContent=rows.length.toLocaleString("th-TH");
-  const complete=rows.filter(r=>METRICS.every(m=>Number.isFinite(r[m])));
-  document.getElementById("kpiComplete").textContent=complete.length.toLocaleString("th-TH");
-  const years=yearsOf(rows), latest=years.at(-1), previous=years.at(-2);
-  ["Tar","Nicotine","CO"].forEach(metric=>{
-    const curr=median(rows.filter(r=>r.year===latest).map(r=>r[metric]));
-    const prev=median(rows.filter(r=>r.year===previous).map(r=>r[metric]));
-    const ids={Tar:["kpiTar","kpiTarSub"],Nicotine:["kpiNic","kpiNicSub"],CO:["kpiCO","kpiCOSub"]}[metric];
-    document.getElementById(ids[0]).textContent=fmt(curr);
-    document.getElementById(ids[1]).textContent=`mg/มวน ${trendLabel(pctChange(curr,prev))}`;
-  });
-  const above=rows.filter(r=>METRICS.some(m=>Number.isFinite(r[m]) && r[m]>LIMITS[m])).length;
-  document.getElementById("kpiAbove").textContent=above.toLocaleString("th-TH");
-}
-function renderSummary(rows){
-  const years=yearsOf(rows), first=years[0], latest=years.at(-1), prev=years.at(-2);
-  if(!years.length){document.getElementById("executiveSummary").textContent="ไม่พบข้อมูลสำหรับตัวกรองที่เลือก";return;}
-  const bits=METRICS.map(m=>{
-    const cur=median(rows.filter(r=>r.year===latest).map(r=>r[m]));
-    const pr=median(rows.filter(r=>r.year===prev).map(r=>r[m]));
-    const p=cur===null?null:cur/LIMITS[m]*100;
-    const ch=pctChange(cur,pr);
-    let direction="ยังไม่สามารถประเมินทิศทาง";
-    if(Number.isFinite(ch)) direction=ch>1?"เพิ่มขึ้น":ch<-1?"ลดลง":"ค่อนข้างทรงตัว";
-    return `${m} มีค่ามัธยฐาน ${fmt(cur)} mg/มวน (${fmt(p,1)}% ของเกณฑ์) และมีแนวโน้ม${direction}เมื่อเทียบกับปีก่อน`;
-  });
-  let legalNote = latest < 2572
-    ? "ข้อมูลดังกล่าวอยู่ในช่วงเปลี่ยนผ่านก่อนการบังคับใช้เต็มรูปแบบ จึงเป็นการเปรียบเทียบกับเกณฑ์ที่จะใช้บังคับเต็มรูปแบบ"
-    : "ข้อมูลปี 2572 ไม่สามารถจำแนกก่อนและหลังวันที่ 24 พฤษภาคม 2572 ได้ เนื่องจากไม่มีข้อมูลวันที่รายรายการ";
-  document.getElementById("executiveSummary").innerHTML=
-    `ข้อมูลตั้งแต่ปี พ.ศ. <strong>${first}</strong> ถึง <strong>${latest}</strong> ภายใต้ตัวกรองปัจจุบันมี <strong>${rows.length.toLocaleString("th-TH")}</strong> รายการ โดย ${bits.join("； ")}.<br><br>${legalNote}`;
-}
-function renderQuality(rows){
-  const missing=rows.filter(r=>METRICS.some(m=>!Number.isFinite(r[m]))).length;
-  document.getElementById("qRows").textContent=rows.length.toLocaleString("th-TH");
-  document.getElementById("qMissing").textContent=missing.toLocaleString("th-TH");
-  document.getElementById("qYears").textContent=yearsOf(rows).length.toLocaleString("th-TH");
-  document.getElementById("qUpdated").textContent=new Date().toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"});
-}
-function renderAll(){
-  const rows=filteredRows();
-  renderKPIs(rows); renderOverall(rows);
-  renderMetricChart("tarChart","tar","Tar",10);
-  renderMetricChart("nicChart","nic","Nicotine",1);
-  renderMetricChart("coChart","co","CO",10);
-  renderDistribution(rows); renderSummary(rows); renderQuality(rows);
-}
-function setData(rows,source){
-  sourceData=cleanRows(rows); currentSource=source;
-  updateFilters();
-  const typeFilter=document.getElementById("typeFilter");
-  if([...typeFilter.options].some(o=>o.value==="Cigarette")) typeFilter.value="Cigarette";
-  renderAll();
-  document.getElementById("loadStatus").textContent=`แหล่งข้อมูล: ${source} • ฐานข้อมูลทั้งหมด ${sourceData.length.toLocaleString("th-TH")} รายการ • ค่าเริ่มต้นแสดง Cigarette • Dashboard ไม่แสดงชื่อบริษัท`;
+function normalizeRows(data){
+  return data.filter(r => (r.Product_ID || r.Company_ID)).map(r => {
+    const tar = numberOrNull(r.Tar);
+    const nic = numberOrNull(r.Nicotine);
+    const co = numberOrNull(r.CO);
+    return {
+      Product_ID: String(r.Product_ID || r.Company_ID).trim(),
+      Product_Type: normalizeType(r.Product_Type),
+      year: Number(r.year ?? r["ปีที่รับแจ้ง"]),
+      Tar: tar,
+      Nicotine: nic,
+      CO: co,
+      Exceed_Count: Number(r.Exceed_Count ?? r["จำนวนสารที่เกินเกณฑ์"] ?? [tar,nic,co].filter((v,i)=>Number.isFinite(v) && v > [10,1,10][i]).length),
+    };
+  }).filter(r => r.Product_ID && Number.isFinite(r.year));
 }
 function workbookToRows(buffer){
-  const wb=XLSX.read(buffer,{type:"array"});
-  const ws=wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(ws,{defval:null});
+  const wb = XLSX.read(buffer, {type:"array"});
+  const sheetName = wb.SheetNames.includes("วิเคราะห์เทียบเกณฑ์") ? "วิเคราะห์เทียบเกณฑ์" : wb.SheetNames[0];
+  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null}).map(r => ({
+    Product_ID: r.Product_ID ?? r.Company_ID,
+    Product_Type: r.Product_Type,
+    year: r["ปีที่รับแจ้ง"] ?? r.year,
+    Tar: r.Tar,
+    Nicotine: r.Nicotine,
+    CO: r.CO,
+    Exceed_Count: r["จำนวนสารที่เกินเกณฑ์"] ?? r.Exceed_Count
+  }));
+}
+function yearsOf(){
+  return [...new Set(rows.map(r => r.year))].sort((a,b) => a-b);
+}
+function fillFilters(){
+  const oldY = yearFilter.value;
+  const oldT = typeFilter.value;
+  yearFilter.innerHTML = '<option value="all">ทั้งหมด</option>';
+  yearsOf().forEach(y => yearFilter.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`));
+  typeFilter.innerHTML = '<option value="all">ทั้งหมด</option>';
+  [...new Set(rows.map(r => r.Product_Type))].sort().forEach(t => typeFilter.insertAdjacentHTML("beforeend", `<option value="${t}">${t}</option>`));
+  yearFilter.value = [...yearFilter.options].some(o=>o.value===oldY) ? oldY : String(yearsOf().at(-1) ?? "all");
+  if([...typeFilter.options].some(o=>o.value===oldT)) typeFilter.value = oldT;
+  else if([...typeFilter.options].some(o=>o.value==="Cigarette")) typeFilter.value = "Cigarette";
+  else typeFilter.value = "all";
+}
+function baseFilteredRows(){
+  const y = yearFilter.value;
+  const t = typeFilter.value;
+  return rows.filter(r => (y === "all" || String(r.year) === y) && (t === "all" || r.Product_Type === t));
+}
+function currentFilteredRows(){
+  const base = baseFilteredRows();
+  const status = statusFilter.value;
+  return base.filter(r => {
+    const p = pct(r[activeMetric], activeMetric);
+    if(status === "all") return true;
+    if(status === "exceed") return p > 100;
+    if(status === "watch") return p >= 80 && p <= 100;
+    if(status === "within") return Number.isFinite(p) && p < 80;
+    return true;
+  });
+}
+function renderKPIs(){
+  const base = baseFilteredRows();
+  const total = base.length;
+  const exceed = base.filter(r => r.Exceed_Count > 0).length;
+  const watch = base.filter(r => ["Tar","Nicotine","CO"].some(m => {
+    const p = pct(r[m], m);
+    return Number.isFinite(p) && p >= 80 && p <= 100;
+  })).length;
+  const one = base.filter(r => r.Exceed_Count === 1).length;
+  const two = base.filter(r => r.Exceed_Count === 2).length;
+  const three = base.filter(r => r.Exceed_Count === 3).length;
+
+  kTotal.textContent = total.toLocaleString("th-TH");
+  kExceed.textContent = exceed.toLocaleString("th-TH");
+  kExceedPct.textContent = total ? `${(exceed/total*100).toFixed(1)}% ของทั้งหมด` : "–";
+  kWatch.textContent = watch.toLocaleString("th-TH");
+  kOne.textContent = one.toLocaleString("th-TH");
+  kTwo.textContent = two.toLocaleString("th-TH");
+  kThree.textContent = three.toLocaleString("th-TH");
+}
+function renderChart(){
+  const list = currentFilteredRows().filter(r => Number.isFinite(r[activeMetric]));
+  if(sortFilter.value === "desc"){
+    list.sort((a,b) => (b[activeMetric] - a[activeMetric]) || a.Product_ID.localeCompare(b.Product_ID, undefined, {numeric:true}));
+  } else {
+    list.sort((a,b) => a.Product_ID.localeCompare(b.Product_ID, undefined, {numeric:true}) || a.year - b.year);
+  }
+
+  const labels = list.map(r => `${r.Product_ID} (${r.year})`);
+  const values = list.map(r => r[activeMetric]);
+  const limit = LIMITS[activeMetric];
+  const colors = list.map(r => {
+    const p = pct(r[activeMetric], activeMetric);
+    if(p > 100) return "#d64045";
+    if(p >= 80) return "#ef7d22";
+    return "#2f7cc4";
+  });
+
+  chartHolder.style.height = Math.max(540, list.length * 28 + 100) + "px";
+  if(chart) chart.destroy();
+
+  const nameMap = {Tar:"ค่าทาร์", Nicotine:"ค่านิโคติน", CO:"ค่าคาร์บอนมอนอกไซด์"};
+  chartTitle.textContent = `${nameMap[activeMetric]}ของทุก Product ID เทียบกับค่ามาตรฐาน`;
+  chartSub.textContent = `แสดงค่าจริงของ ${list.length.toLocaleString("th-TH")} รายการ • เส้นประสีแดง = ค่ามาตรฐานของ ${activeMetric}`;
+  chartCount.textContent = `${list.length.toLocaleString("th-TH")} Product`;
+
+  chart = new Chart(mainChart, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: activeMetric,
+        data: values,
+        backgroundColor: colors,
+        borderColor: colors,
+        borderWidth: 1,
+        borderRadius: 7,
+        barThickness: 16
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {display: false},
+        regLinePlugin: {
+          value: limit,
+          label: `ค่ามาตรฐาน ${limit} mg/มวน`
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const raw = Number(ctx.raw);
+              const p = pct(raw, activeMetric);
+              return `${activeMetric}: ${raw.toFixed(activeMetric === "Nicotine" ? 2 : 2)} mg/มวน • ${statusLabelByPct(p)} (${p.toFixed(1)}%)`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          suggestedMax: Math.max(limit * 1.35, ...values.map(v => v * 1.08)),
+          title: {display: true, text: "mg/มวน"},
+          ticks: {color:"#475467"}
+        },
+        y: {
+          grid: {display: false},
+          ticks: {autoSkip: false, color:"#344054", font:{size:11}}
+        }
+      }
+    }
+  });
+}
+function renderTableAndSummary(){
+  const base = baseFilteredRows();
+  const exceedRows = base.filter(r => r.Exceed_Count > 0).map(r => {
+    const ratios = {
+      Tar: pct(r.Tar, "Tar"),
+      Nicotine: pct(r.Nicotine, "Nicotine"),
+      CO: pct(r.CO, "CO")
+    };
+    const maxMetric = Object.entries(ratios).filter(x=>Number.isFinite(x[1])).sort((a,b)=>b[1]-a[1])[0];
+    return {
+      ...r,
+      maxMetric: maxMetric ? maxMetric[0] : "",
+      maxPct: maxMetric ? maxMetric[1] : null
+    };
+  }).sort((a,b) => (b.maxPct ?? -Infinity) - (a.maxPct ?? -Infinity));
+
+  tableCount.textContent = `${exceedRows.length.toLocaleString("th-TH")} Product`;
+  tableBody.innerHTML = exceedRows.map(r => {
+    const pillClass = r.maxPct > 100 ? "red" : r.maxPct >= 80 ? "orange" : "blue";
+    const statusText = r.maxPct > 100 ? `เกินเกณฑ์ (${r.maxMetric})` : r.maxPct >= 80 ? `ใกล้เกณฑ์ (${r.maxMetric})` : "ต่ำกว่าเกณฑ์";
+    return `<tr>
+      <td><strong>${r.Product_ID}</strong></td>
+      <td>${r.year}</td>
+      <td class="num">${Number.isFinite(r.Tar)?r.Tar.toFixed(2):"–"}</td>
+      <td class="num">${Number.isFinite(r.Nicotine)?r.Nicotine.toFixed(2):"–"}</td>
+      <td class="num">${Number.isFinite(r.CO)?r.CO.toFixed(2):"–"}</td>
+      <td class="num"><strong>${r.Exceed_Count}</strong></td>
+      <td><span class="pill ${pillClass}">${statusText}</span></td>
+    </tr>`;
+  }).join("");
+
+  const tarEx = base.filter(r => pct(r.Tar,"Tar") > 100).length;
+  const nicEx = base.filter(r => pct(r.Nicotine,"Nicotine") > 100).length;
+  const coEx = base.filter(r => pct(r.CO,"CO") > 100).length;
+  const watchCount = base.filter(r => ["Tar","Nicotine","CO"].some(m => {
+    const p = pct(r[m],m); return Number.isFinite(p) && p >= 80 && p <= 100;
+  })).length;
+  const lowCount = base.filter(r => ["Tar","Nicotine","CO"].every(m => {
+    const p = pct(r[m],m); return Number.isFinite(p) && p < 80;
+  })).length;
+
+  summaryList.innerHTML = `
+    <div class="summary-row">
+      <div>
+        <strong>Tar สูงกว่าค่ามาตรฐาน</strong><br>
+        <span>มากกว่า 10 mg/มวน</span>
+      </div>
+      <span class="pill red">${tarEx.toLocaleString("th-TH")} Product</span>
+    </div>
+    <div class="summary-row">
+      <div>
+        <strong>Nicotine สูงกว่าค่ามาตรฐาน</strong><br>
+        <span>มากกว่า 1 mg/มวน</span>
+      </div>
+      <span class="pill red">${nicEx.toLocaleString("th-TH")} Product</span>
+    </div>
+    <div class="summary-row">
+      <div>
+        <strong>CO สูงกว่าค่ามาตรฐาน</strong><br>
+        <span>มากกว่า 10 mg/มวน</span>
+      </div>
+      <span class="pill red">${coEx.toLocaleString("th-TH")} Product</span>
+    </div>
+    <div class="summary-row">
+      <div>
+        <strong>ใกล้ค่ามาตรฐาน</strong><br>
+        <span>อย่างน้อย 1 สารอยู่ในช่วง 80–100%</span>
+      </div>
+      <span class="pill orange">${watchCount.toLocaleString("th-TH")} Product</span>
+    </div>
+    <div class="summary-row">
+      <div>
+        <strong>ต่ำกว่า 80% ทุกสาร</strong><br>
+        <span>ยังต่ำกว่าค่ามาตรฐานค่อนข้างมาก</span>
+      </div>
+      <span class="pill blue">${lowCount.toLocaleString("th-TH")} Product</span>
+    </div>`;
+}
+function renderAll(){
+  renderKPIs();
+  renderChart();
+  renderTableAndSummary();
+}
+function setRows(data, source){
+  rows = normalizeRows(data);
+  fillFilters();
+  renderAll();
+  loadStatus.textContent = `แหล่งข้อมูล: ${source} • ${rows.length.toLocaleString("th-TH")} รายการ • สีส้ม = ใกล้ค่ามาตรฐาน • สีแดง = สูงกว่าค่ามาตรฐาน`;
 }
 async function loadServerExcel(){
   try{
-    const res=await fetch(`data/latest.xlsx?ts=${Date.now()}`,{cache:"no-store"});
-    if(!res.ok) throw new Error("ไม่พบ data/latest.xlsx");
-    const buf=await res.arrayBuffer();
-    setData(workbookToRows(buf),"data/latest.xlsx บนเซิร์ฟเวอร์");
-  }catch(e){
-    setData(EMBEDDED_DATA,"ข้อมูลปัจจุบันที่ฝังมากับเว็บ (fallback)");
+    const res = await fetch(`data/latest.xlsx?t=${Date.now()}`, {cache:"no-store"});
+    if(!res.ok) throw new Error("โหลด data/latest.xlsx ไม่สำเร็จ");
+    const buf = await res.arrayBuffer();
+    const loaded = workbookToRows(buf);
+    setRows(loaded, "data/latest.xlsx บนเว็บไซต์");
+  }catch(err){
+    setRows(EMBEDDED, "ข้อมูลสำรองที่ฝังในเว็บไซต์");
   }
 }
-document.getElementById("fileInput").addEventListener("change",async e=>{
-  const f=e.target.files?.[0]; if(!f)return;
-  try{ setData(workbookToRows(await f.arrayBuffer()),`ไฟล์ที่อัปโหลด: ${f.name}`); }
-  catch(err){ alert("ไม่สามารถอ่านไฟล์ Excel ได้: "+err.message); }
-});
-["yearFilter","typeFilter","metricFilter"].forEach(id=>document.getElementById(id).addEventListener("change",renderAll));
-document.getElementById("reloadBtn").addEventListener("click",loadServerExcel);
 
-
-function downloadSummaryCsv(){
-  const rows = filteredRows();
-  const years = yearsOf(rows);
-  const latest = years.at(-1);
-  const previous = years.at(-2);
-
-  const lines = [];
-  lines.push(["หัวข้อ","ค่า"]);
-  lines.push(["ระบบ","ระบบติดตามแนวโน้มสารที่เกิดจากการเผาไหม้ของส่วนประกอบของผลิตภัณฑ์ยาสูบ"]);
-  lines.push(["ปีที่เลือก",document.getElementById("yearFilter").selectedOptions[0]?.textContent || "ทั้งหมด"]);
-  lines.push(["ประเภทผลิตภัณฑ์",document.getElementById("typeFilter").selectedOptions[0]?.textContent || "ทั้งหมด"]);
-  lines.push(["จำนวนรายการ",rows.length]);
-  lines.push(["ข้อมูลสมบูรณ์",rows.filter(r=>METRICS.every(m=>Number.isFinite(r[m]))).length]);
-  lines.push([]);
-
-  lines.push(["สาร","ปีล่าสุด","Median","Mean","Min","Max","N","% ของเกณฑ์","เปลี่ยนแปลงจากปีก่อน (%)"]);
-  METRICS.forEach(metric=>{
-    const latestVals = rows.filter(r=>r.year===latest).map(r=>r[metric]).filter(Number.isFinite);
-    const prevVals = rows.filter(r=>r.year===previous).map(r=>r[metric]).filter(Number.isFinite);
-    const med = median(latestVals);
-    const avg = mean(latestVals);
-    const minv = latestVals.length ? Math.min(...latestVals) : null;
-    const maxv = latestVals.length ? Math.max(...latestVals) : null;
-    const prevMed = median(prevVals);
-    const pctLimit = Number.isFinite(med) ? med/LIMITS[metric]*100 : null;
-    const change = pctChange(med,prevMed);
-    lines.push([
-      metric,
-      latest ?? "",
-      Number.isFinite(med)?med.toFixed(3):"",
-      Number.isFinite(avg)?avg.toFixed(3):"",
-      Number.isFinite(minv)?minv.toFixed(3):"",
-      Number.isFinite(maxv)?maxv.toFixed(3):"",
-      latestVals.length,
-      Number.isFinite(pctLimit)?pctLimit.toFixed(1):"",
-      Number.isFinite(change)?change.toFixed(1):""
-    ]);
+document.querySelectorAll(".metric-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".metric-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeMetric = btn.dataset.metric;
+    renderAll();
   });
-
-  lines.push([]);
-  lines.push(["รายละเอียดข้อมูลที่ใช้ในรายงาน"]);
-  lines.push(["Record_ID","Product_Type","ปีที่รับแจ้ง","Tar","Nicotine","CO"]);
-  rows.forEach(r=>lines.push([r.id,r.type,r.year,r.Tar ?? "",r.Nicotine ?? "",r.CO ?? ""]));
-
-  const csv = "\ufeff" + lines.map(row =>
-    row.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(",")
-  ).join("\r\n");
-
-  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const yText = document.getElementById("yearFilter").selectedOptions[0]?.textContent || "ทั้งหมด";
-  const tText = document.getElementById("typeFilter").selectedOptions[0]?.textContent || "ทั้งหมด";
-  a.href = url;
-  a.download = `tobacco_emission_report_${tText}_${yText}.csv`.replace(/\s+/g,"_");
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-document.getElementById("printBtn").addEventListener("click",()=>{
-  setTimeout(()=>window.print(),100);
 });
-document.getElementById("downloadCsvBtn").addEventListener("click",downloadSummaryCsv);
+[yearFilter, typeFilter, statusFilter, sortFilter].forEach(el => el.addEventListener("change", renderAll));
+printBtn.addEventListener("click", () => window.print());
 
-
-setData(EMBEDDED_DATA,"ข้อมูลปัจจุบันที่ฝังมากับเว็บ");
+setRows(EMBEDDED, "ข้อมูลสำรองที่ฝังในเว็บไซต์");
 loadServerExcel();
-
-// Poll server-side Excel every 5 minutes. Replacing data/latest.xlsx on the server
-// will refresh the dashboard automatically without editing source code.
-setInterval(loadServerExcel, 5*60*1000);
 </script>
 </body>
 </html>
